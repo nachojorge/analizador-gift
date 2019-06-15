@@ -10,9 +10,10 @@ import Tipos
 leeMX :: (a -> Bool) -> [a] -> Maybe ([a], a, [a])
 leeMX m [] = Nothing
 leeMX m (x:xs)
-  | m x       = Just ([ ],  x, xs)
+  | m x       = Just ([],  x, xs)
   | otherwise = do (ws, z, zs) <- leeMX m xs
                    return (x:ws, z, zs)
+
 
 --- El programa leeMO lee una lista hasta encontrar una marca. Si no encuentra
 --- marcas, devuelve Nothing en el segundo argumento y la lista vacía en el
@@ -20,13 +21,18 @@ leeMX m (x:xs)
 
 leeMO :: (a -> Bool) -> [a] -> ([a], Maybe a, [a])
 leeMO m [] = ([], Nothing, [])
-leeMO m (x:xs) = undefined
+leeMO m (x:xs)
+  | m x       = ([], Just x, xs)
+  | otherwise = case (leeMO m xs) of
+                     ([], Nothing, []) -> ([], Nothing, [])
+                     (ws, Just z, zs) -> (x:ws, Just z, zs)
 
 
 getCuestionario :: (CCuerpo a) => [ String ] -> Maybe (Cuestionario a)
 getCuestionario txt =
   do (ys, zs) <- getEjercicios txt
      return ys
+
 
 getEjercicio :: (CCuerpo a) => [ String ] -> Maybe (Ejercicio a, [ String ])
 getEjercicio xs =
@@ -45,9 +51,12 @@ getEjercicios :: (CCuerpo a) => [ String ] -> Maybe ([Ejercicio a], [ String ])
 getEjercicios    []  = Just ([], [])
 getEjercicios xss = undefined
 
+
 --- Predicado; decide si una línea es un comentario
 esComentario :: String -> Bool
-esComentario xs = undefined
+esComentario xs = case xs of
+                       '/':'/':_ -> True
+                       xs        -> False
 
 
 skipNLs :: [ String ] -> [ String ]
@@ -61,7 +70,22 @@ skipNLs = dropWhile (all isSpace)
 --- los "/" adicionales se reemplazan por blancos " ".
 
 getComs :: [ String ] -> Maybe (Comentario, [ String ])
-getComs xs = undefined
+getComs [] = Nothing
+getComs (xs) = 
+  let (cms, Just nocm, qas) = leeMO (not . esComentario) xs
+  in case cms of
+          []  -> Nothing
+          cms -> Just (COM (quitarBarras cms) , nocm:qas)
+
+quitarBarras :: [ String ] -> [ String ]
+quitarBarras [] = []
+quitarBarras (x:xs) = case x of
+                         '/' : '/' : ys -> replaceBars ys : quitarBarras xs
+
+replaceBars :: String -> String
+replaceBars [] = []
+replaceBars ('/' : xs) = ' ' : replaceBars xs
+replaceBars xs = xs
 
 --- Un nombre está parentizado por "::".
 --- Debe empezar y terminar en una unica linea, y estar al comienzo.
@@ -69,17 +93,14 @@ getComs xs = undefined
 --- si no hay nombre al inicio.
 
 getNombre ((':' : ':' : nmqas) : ys)
-  = let (nm , qas) = break (== ':') nmqas
+  = let (nm, qas) = break (== ':') nmqas
         f (w : ws) = if (all isSpace w) then ws else (w:ws)
     in case qas of
-         _:':':zs   -> Just (nm, f (zs:ys))
-         otherwise -> Nothing
+          _:':':zs  -> Just (nm, f (zs:ys))
+          otherwise -> Nothing
 getNombre _
-  = Nothing
-
+  = Nothing 
 
 instance CCuerpo Char where
   getCuerpo xs = do (qas, z, zs) <- leeMX esComentario xs
                     return (unlines qas, z:zs)
-
-

@@ -108,4 +108,3 @@ comandoHTML com str = startHTMLspan com ++ str ++ endHTMLspan
 startHTMLdiv com = "<div class=\"" ++ com ++ "\">\n"
 endHTMLdiv = "</div>\n"
 entornoHTML com str = startHTMLdiv com ++ str ++ endHTMLdiv
-
