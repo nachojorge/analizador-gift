@@ -46,14 +46,6 @@ getEjercicio xs =
 --- debe usar el analizador anterior getEjercicio.
 --- Identifica todos los ejercicios que pueda
 
--- getEjercicios :: (CCuerpo a) => [ String ] -> Maybe ([Ejercicio a], [ String ])
--- getEjercicios    []  = Just ([], [])
--- getEjercicios (x:xs) =
---   let Just (y, ys) = getEjercicios xs
---   in case getEjercicio (x:xs) of
---                       Nothing -> Just ([], x:xs)
---                       Just (ej, xs) -> Just (ej : y, ys)
-
 getEjercicios :: (CCuerpo a) => [ String ] -> Maybe ([Ejercicio a], [ String ])
 getEjercicios    []  = Just ([], [])
 getEjercicios (x:xs) =
