@@ -147,14 +147,16 @@ str2a :: String -> Maybe ( Respuesta , String )
 str2a "" = Nothing
 str2a xxs@(x:xs)
   | isSpace x      = str2a xs
-  | x == '='       = Just (MO z, zx)
-  | x == '~'       = Just (MO z, zx)
+  | x == '='       = Just (MO z, cx)
+  | x == '~'       = Just (MO z, cx)
   | x == '}'       = Just (ESSAY, xs)
   | otherwise      = do (b, ys) <- readFV xxs
                         return (FV b, ys)
-  where Just (z,zx) = getSeq leerOpcion xxs
+  where Just (z,zx) = getSeq leerOpcion ws
+        Just (ws, c, cx) = leeMXE (== '}') escape xxs
 
 leerOpcion :: String -> Maybe ( Opcion , String )
+leerOpcion [] = Nothing
 leerOpcion ('}':xs) = Nothing
 leerOpcion ('=':xs) = do (op, zs) <- getSeq getFragmento xs
                          return (OK op, zs)
