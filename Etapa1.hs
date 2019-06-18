@@ -3,7 +3,6 @@ module Etapa1 where
 import Data.Char (isSpace)
 import Tipos
 
-
 --- El programa leeMX lee una lista hasta encontrar una marca. Si no encuentra
 --- marcas, devuelve Nothing.
 
@@ -108,6 +107,3 @@ getNombre _
 instance CCuerpo Char where
   getCuerpo xs = do (qas, z, zs) <- leeMX esComentario xs
                     return (unlines qas, z:zs)
-
-
--- ["\n","// ejemplo de verdadero falso","//","::fv.1:: Grant murio en 1886 { FALSO }","// fin de pregunta","\n","// ejemplo de multiple opcion","::mo.2:: Los dos Reyes y los dos {=laberintos ~vasallos ~magos}","// fin de pregunta"]

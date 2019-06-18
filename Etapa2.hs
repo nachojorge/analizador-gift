@@ -97,10 +97,12 @@ str2qas xs = do (qs, zs) <- getSeq str2qa xs
 str2qa :: String -> Maybe (QA, String)
 str2qa [] = Nothing
 str2qa (x:xs)
-      | x == '{'     = Just (A a, ax)
-      | otherwise    = Just (Q q, qx)
-      where Just (a, ax) = str2a xs
-            Just (q, qx) = str2q (x:xs)
+      | x == '{'     = do (a, ax) <- str2a xs
+                          return (A a, ax)
+      | otherwise    = do (q, qx) <- str2q (x:xs)
+                          case q of
+                              [] -> Nothing
+                              q  -> return (Q q, qx)
 
 
 ---- str2q procesa una Pregunta.
@@ -147,21 +149,28 @@ str2a :: String -> Maybe ( Respuesta , String )
 str2a "" = Nothing
 str2a xxs@(x:xs)
   | isSpace x      = str2a xs
-  | x == '='       = Just (MO z, cx)
-  | x == '~'       = Just (MO z, cx)
+  | x == '='       = do (ws, c, cs) <- leeMXE (== '}') escape xxs
+                        (z, zs) <- getSeq leerOpcion ws
+                        case (z, zs) of
+                            ([], _) -> Nothing
+                            (z, []) -> return (MO z, cs)
+                            (_, _) -> Nothing
+  | x == '~'       = do (ws, c, cs) <- leeMXE (== '}') escape xxs
+                        (z, zs) <- getSeq leerOpcion ws
+                        case (z, zs) of
+                            ([], _) -> Nothing
+                            (z, []) -> return (MO z, cs)
+                            (_, _) -> Nothing
   | x == '}'       = Just (ESSAY, xs)
   | otherwise      = do (b, ys) <- readFV xxs
                         return (FV b, ys)
-  where Just (z,zx) = getSeq leerOpcion ws
-        Just (ws, c, cx) = leeMXE (== '}') escape xxs
 
 leerOpcion :: String -> Maybe ( Opcion , String )
-leerOpcion [] = Nothing
-leerOpcion ('}':xs) = Nothing
 leerOpcion ('=':xs) = do (op, zs) <- getSeq getFragmento xs
                          return (OK op, zs)
 leerOpcion ('~':xs) = do (op, zs) <- getSeq getFragmento xs
                          return (NOK op , zs)
+leerOpcion (_) = Nothing
 
 --- Un QA puede abarcar varias líneas. Termina en un comentario.
 --- Se devuelve una única línea.
